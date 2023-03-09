@@ -122,7 +122,7 @@ def main(args):
     save_interval = total_episodes//20
     alpha = args.alpha
     gamma = args.gamma
-    
+
     global win, loss
     win,loss= 0,0
 
@@ -156,62 +156,23 @@ def main(args):
     for episode in range(total_episodes):
 
         total_rewards,reward,step = method.run_episode(env,epsilon)
-
-        # statestate = env.reset()
-        # state = statestate[0]
-        
-        # if args.method == 'sa':
-        #     action = method.choose_action(epsilon,state)
-
-
-        # env.render()
-
-        # step,total_rewards,done = 0,0,False
-        
-        # while not done:
-        #     step += 1
-
-        #     if args.method == 'ql':
-        #         action = method.choose_action(epsilon,state)
-            
-        #     new_state, reward, done, truncated, info = env.step(action) 
-
-        #     if args.method == 'sa':
-        #         action = method.choose_action(epsilon,new_state)
-            
-        #     method.update_Q(state,
-        #                     action,
-        #                     reward,
-        #                     new_state)
-
-        #     state = new_state
-        #     total_rewards += reward
-
-        #     if done: 
-        #         if reward == 1:
-        #             win += 1
-        #         elif reward == -1:
-        #             loss += 1
-        #         else:
-        #             pass
-
-        #         break
         
         if reward == 1:
             win += 1
         elif reward == -1:
             loss += 1
 
-
         epsilon = min_epsilon + (max_epsilon - min_epsilon) * np.exp(-decay_rate * (episode+1))
         rewards.append(total_rewards)
-        print(f"Win: {win}, Loss: {loss}")
+        log_string(f"Win: {win}, Loss: {loss}")
         with open(str(method_data_dump_dir)+'\\results.txt', 'a') as g:
             g.write(f"Episode {episode+1}: Steps: {step}, Reward: {total_rewards}\n")
 
         if (episode+1) % save_interval == 0:
             np.save(str(log_dir)+f'\\qtable{episode}.npy',method.qtable)
             np.save(str(log_dir)+f'\\ntable{episode}.npy',method.ntable)
+
+            MAX_STEPS = SIZE**2
         
         results_array.append([step,reward])
         print('[*] episode {}, total reward {}, average score {}'.format(episode, total_rewards, sum(rewards)/(episode+1)))

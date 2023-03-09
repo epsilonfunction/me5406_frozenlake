@@ -36,16 +36,58 @@ class ReinforcementLearning:
         step,total_rewards,done = 0,0,False
 
 class MonteCarlo(ReinforcementLearning):
-    def __init__(self, n_states, n_actions, gamma):
-        super().__init__(n_states, n_actions, gamma)
+    def __init__(self, size, state_size, action_size, gamma):
+        super().__init__(size, state_size, action_size, gamma)
         self.rtable = [[[] for i in range(action_size)] for j in range(state_size)]
 
     
-    def update_Q(self, state, action, reward, next_state, next_action=None):
-        G = reward
-        if next_state is not None:
-            G += self.gamma * np.max(self.Q[next_state])
-        self.Q[state, action] += G
+    def update_Q(self):
+        
+        returns = {}
+        G = 0
+        for t in reversed(range(len(self.sa_seq))):
+            state, action, reward = self.sa_seq[t]
+            G = self.gamma * G + reward
+            if str((state, action)) not in returns:
+                returns[str((state, action))] = []
+            else:
+                continue # Avoid appending the next value if it already exists, Hence only the first value pair is added.
+            returns[str((state, action))].append(G)
+
+        for state_action, g_first in returns.items():
+            state, action = eval(state_action)
+            self.rtable[state][action] += g_first
+            self.qtable[state, action] = np.mean(self.rtable[state][action])
+
+    def run_episode(self,env,epsilon):
+
+        statestate = env.reset()
+        state = statestate[0]
+        total_rewards = 0
+        env.render()
+
+        step,total_rewards,done = 0,0,False
+        self.sa_seq = []
+
+        action = self.choose_action(epsilon,state)
+        
+        while not done:
+            step += 1
+            new_state, reward, done, truncated, info = env.step(action) 
+
+            self.sa_seq.append((state,action,reward))
+
+            state = new_state
+            total_rewards += reward
+            self.ntable[state,action] += 1
+
+            action = self.choose_action(epsilon,state)
+
+        self.update_Q()
+    
+        return total_rewards,reward,step
+
+
 
 
 class QLearning(ReinforcementLearning):
@@ -111,8 +153,8 @@ class SARSA(ReinforcementLearning):
             self.update_Q(state,
                         action,
                         reward,
-                        new_state)
-            
+                        new_state,
+                        new_action)
             state = new_state
             action = new_action
             total_rewards += reward
