@@ -16,7 +16,7 @@ import pickle
 
 from method import actions_utils
 from method.RLmethod import MonteCarlo,QLearning,SARSA
-
+from method.map_utils import fix_map
 
 
 """ARGS PARSING"""
@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument('--epsi_max',  type=float, default=1.0,help='Maximum Epsilon Greedy Factor [default: 1.0]')
     parser.add_argument('--epsi_min',  type=float, default=0.01,help='Minimum Epsilon Greedy Factor [default: 0.01]')
     parser.add_argument('--decay',  type=float, default=0.0001,help='Epsilon Greedy Decay Factor [default: 0.0001]')
-    parser.add_argument('--default', type=bool, default=True, help='Is default map settings to be used? [default:True]')
+    parser.add_argument('--use_default', type=int, default=1, help='Is default map settings to be used? [default:1]')
     parser.add_argument('--render', type=bool,default=False,help="Render the learning process? [default: False]")
     return parser.parse_args()
 
@@ -50,8 +50,8 @@ def main(args):
     timestamp = int(time.time())
     experiment_dir = Path('./data/')
     experiment_dir.mkdir(exist_ok=True)
-    if args.default==True:
-        experiment_dir = experiment_dir.joinpath('default/')
+    if args.use_default==1:
+        experiment_dir = experiment_dir.joinpath('use_default/')
     else:
         if type(args.map_load) == str:
             experiment_dir = experiment_dir.joinpath(f'{args.map_load}/')
@@ -82,12 +82,13 @@ def main(args):
     EPISODE = args.episode
     SIZE = args.size 
 
-    if args.default==True:
+    if args.use_default==1:
         env = gym.make('FrozenLake-v1',
                        is_slippery=False,
                        render_mode=None )
 
     else:
+
         if type(args.map_load) == str:
             with open(str(experiment_dir)+'\\map_desc.pickle', 'rb') as f:
                 map_desc = pickle.load(f)
@@ -95,6 +96,7 @@ def main(args):
 
             from gym.envs.toy_text.frozen_lake import generate_random_map
             map_desc=generate_random_map(size=SIZE)
+            map_desc = fix_map(map_desc,0.25)
             with open(str(experiment_dir)+'\\map_desc.pickle','wb') as h:
                 pickle.dump(map_desc,h)
 
@@ -164,7 +166,7 @@ def main(args):
 
         epsilon = min_epsilon + (max_epsilon - min_epsilon) * np.exp(-decay_rate * (episode+1))
         rewards.append(total_rewards)
-        log_string(f"Win: {win}, Loss: {loss}")
+        print(f"Win: {win}, Loss: {loss}")
         with open(str(method_data_dump_dir)+'\\results.txt', 'a') as g:
             g.write(f"Episode {episode+1}: Steps: {step}, Reward: {total_rewards}\n")
 
@@ -173,7 +175,9 @@ def main(args):
             np.save(str(log_dir)+f'\\ntable{episode}.npy',method.ntable)
 
             MAX_STEPS = SIZE**2
-        
+            total_rewards,reward,step = method.run_at_optimum(env,MAX_STEPS)
+            log_string(f"Episode {episode+1}: Steps: {step}, Reward: {total_rewards}\n")
+
         results_array.append([step,reward])
         print('[*] episode {}, total reward {}, average score {}'.format(episode, total_rewards, sum(rewards)/(episode+1)))
 

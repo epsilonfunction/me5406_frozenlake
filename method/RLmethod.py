@@ -25,15 +25,32 @@ class ReinforcementLearning:
     def update_Q(self, state, action, reward, next_state, next_action=None):
         raise NotImplementedError()
     
-    def final_states(self):
-        return self.qtable, self.ntable
-
     def run_episode(self,env):
         statestate = env.reset()
         state = statestate[0]
         env.render()
 
         step,total_rewards,done = 0,0,False
+
+    def run_at_optimum(self,env,max_steps):
+
+        statestate = env.reset()
+        state = statestate[0]
+        total_rewards = 0
+        env.render()
+
+        step,total_rewards,done = 0,0,False
+        
+        while (not done) and (step < max_steps):
+            step += 1
+            action = np.argmax(self.qtable[state])
+            new_state, reward, done, truncated, info = env.step(action) 
+            state = new_state
+            total_rewards += reward
+            self.ntable[state,action] += 1
+        
+        return total_rewards,reward,step
+    
 
 class MonteCarlo(ReinforcementLearning):
     def __init__(self, size, state_size, action_size, gamma):
@@ -122,7 +139,7 @@ class QLearning(ReinforcementLearning):
             total_rewards += reward
 
         return total_rewards,reward,step
-
+    
 
 class SARSA(ReinforcementLearning):
     def __init__(self,  size, state_size, action_size, gamma, alpha):
