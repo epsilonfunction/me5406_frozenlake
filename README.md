@@ -9,7 +9,7 @@ Generating New map:
 python main.py --method ql --size 4 --new_map False --episode 10000 --alpha 0.9 --gamma 0.8 --epsi_init 1.0 --epsi_max 1.0 --epsi_min 0.01 --decay 0.0001 --use_default 0 --render False
 
 Current Test Settings:
-python main.py --method ql --size 4 --episode 10000 --alpha 0.9 --gamma 0.8 --epsi_init 1.0 --epsi_max 1.0 --epsi_min 0.01 --decay 0.0001 --use_default 1 --render False
+python main.py --method sa --size 4 --episode 1000 --alpha 0.90 --gamma 0.8 --epsi_init 1.0 --epsi_max 1.0 --epsi_min 0.01 --decay 0.0001 --use_default 1 --render False --sampling 100
 
 To Do: 
 - Create Environment -Done-

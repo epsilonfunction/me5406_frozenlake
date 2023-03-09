@@ -35,6 +35,7 @@ def parse_args():
     parser.add_argument('--decay',  type=float, default=0.0001,help='Epsilon Greedy Decay Factor [default: 0.0001]')
     parser.add_argument('--use_default', type=int, default=1, help='Is default map settings to be used? [default:1]')
     parser.add_argument('--render', type=bool,default=False,help="Render the learning process? [default: False]")
+    parser.add_argument('--sampling',type=int,default=20,help="Number of samples to be taken[Default: 20]" )
     return parser.parse_args()
 
 
@@ -72,7 +73,7 @@ def main(args):
     logger = logging.getLogger("Model")
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler = logging.FileHandler('%s/%s.txt' % (log_dir, args.method))
+    file_handler = logging.FileHandler('%s/%s.txt' % (method_data_dump_dir, args.method))
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -121,7 +122,7 @@ def main(args):
     NORIGHT = [i*SIZE + SIZE for i in range(SIZE)]
 
     total_episodes = args.episode # 1000
-    save_interval = total_episodes//20
+    save_interval = total_episodes//args.sampling
     alpha = args.alpha
     gamma = args.gamma
 
@@ -145,6 +146,7 @@ def main(args):
         exit()
 
     results_array = []
+    summary_dict = {"First":[]}
 
     log_string(f"Method: {args.method}")
     log_string(f"Size: {SIZE} Alpha: {alpha} Gamma: {gamma}")
@@ -174,18 +176,30 @@ def main(args):
             np.save(str(log_dir)+f'\\qtable{episode}.npy',method.qtable)
             np.save(str(log_dir)+f'\\ntable{episode}.npy',method.ntable)
 
-            MAX_STEPS = SIZE**2
+            MAX_STEPS = state_size**2
             total_rewards,reward,step = method.run_at_optimum(env,MAX_STEPS)
+            if step<MAX_STEPS:
+                if len(summary_dict["First"]) == 0:
+                    summary_dict["First"] = (episode,step)
+                    summary_dict["Smallest"] = (episode,step)
+                else:
+                    if step<(summary_dict["Smallest"][1]):
+                        summary_dict["Smallest"] = (episode,step)
             log_string(f"Episode {episode+1}: Steps: {step}, Reward: {total_rewards}\n")
 
         results_array.append([step,reward])
         print('[*] episode {}, total reward {}, average score {}'.format(episode, total_rewards, sum(rewards)/(episode+1)))
+        score = sum(rewards)/(episode+1)
 
+    summary_dict["score"]=(score,win)
     np.save(str(method_data_dump_dir)+'\\qtable_final.npy',method.qtable)
     np.save(str(method_data_dump_dir)+'\\ntable_final.npy',method.ntable)
     ep_step_arr = np.array(results_array)
     print(ep_step_arr.shape)
     np.save(str(method_data_dump_dir)+'\\results_raw.npy',ep_step_arr)
+ 
+    summary_array = np.array(list(summary_dict.values())).flatten()
+    np.save(str(method_data_dump_dir)+'\\stepsummary.npy',summary_array)
 
     env.close()
 if __name__ == '__main__':
