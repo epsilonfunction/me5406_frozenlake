@@ -166,6 +166,8 @@ def main(args):
         elif reward == -1:
             loss += 1
 
+        results_array.append([step,reward,epsilon])
+
         epsilon = min_epsilon + (max_epsilon - min_epsilon) * np.exp(-decay_rate * (episode+1))
         rewards.append(total_rewards)
         print(f"Win: {win}, Loss: {loss}")
@@ -176,7 +178,7 @@ def main(args):
             np.save(str(log_dir)+f'\\qtable{episode}.npy',method.qtable)
             np.save(str(log_dir)+f'\\ntable{episode}.npy',method.ntable)
 
-            MAX_STEPS = state_size**2
+            MAX_STEPS = state_size
             total_rewards,reward,step = method.run_at_optimum(env,MAX_STEPS)
             if step<MAX_STEPS:
                 if len(summary_dict["First"]) == 0:
@@ -187,8 +189,7 @@ def main(args):
                         summary_dict["Smallest"] = (episode,step)
             log_string(f"Episode {episode+1}: Steps: {step}, Reward: {total_rewards}\n")
 
-        results_array.append([step,reward])
-        print('[*] episode {}, total reward {}, average score {}'.format(episode, total_rewards, sum(rewards)/(episode+1)))
+        print('[*] episode {}, total reward {}, average score {}, epsilon {}'.format(episode, total_rewards, sum(rewards)/(episode+1),epsilon))
         score = sum(rewards)/(episode+1)
 
     summary_dict["score"]=(score,win)

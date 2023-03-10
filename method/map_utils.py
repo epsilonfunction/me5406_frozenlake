@@ -12,8 +12,6 @@ def fix_map(lst,p_hole=0.25):
     size_count = 0
     length = len(lst)
 
-    print(lst)
-
     for i in range(length): #row
         for j in range(length): #column
             size_count+= 1
@@ -37,7 +35,6 @@ def fix_map(lst,p_hole=0.25):
             except:
                 pass
             newmap[to_replace[0]] = row
-            print(newmap)
             newmapbool = is_valid(new_map,len(lst))
             while newmapbool == False:
                 input(f"{i}")
@@ -49,7 +46,6 @@ def fix_map(lst,p_hole=0.25):
                 except:
                     pass
                 newmap[to_replace[0]] = row
-                print(newmap)
                 newmapbool = is_valid(new_map,len(lst))
             
             oldmap=newmap.copy()
@@ -68,8 +64,7 @@ def fix_map(lst,p_hole=0.25):
             except:
                 pass
             newmap[to_replace[0]] = row
-            print(newmap)
-            newmapbool = is_valid(new_map,len(lst))
+            newmapbool = is_valid(newmap,len(lst))
             while newmapbool == False:
                 input(f"{i}")
                 rpl_idx = np.random.choice(len(hashmap["H"]))
@@ -81,8 +76,7 @@ def fix_map(lst,p_hole=0.25):
                 except:
                     pass
                 newmap[to_replace[0]] = row
-                print(newmap)
-                newmapbool = is_valid(new_map,len(lst))
+                newmapbool = is_valid(newmap,len(lst))
 
             oldmap=newmap.copy()
             hashmap["F"].append(to_replace)
